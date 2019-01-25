@@ -36,11 +36,9 @@ def precise_dist(ra1, dec1, ra2, dec2):
 ## MAIN PROGRAM
 #########################################################################################
 path = os.getcwd()
-chn = sys.argv[0]
-fov = (234.2/float(chn))*(1./4.509)*(180./np.pi) #deg
-
+chn = sys.argv[1]
+fov = np.round((234.2/float(chn))*(1./4.509)*(180./np.pi), decimals=0) #deg
 tbl_name = 'LOBES_chn%s.fits' %(chn)
-
 
 ## Read in aegean catalogs
 tables = glob.glob('LOBES*_%s_comp.fits' %(chn))
@@ -69,7 +67,9 @@ for t in tables:
 	racen = float(header['CRVAL1']) #deg
 	deccen = float(header['CRVAL2']) #deg
 	
-	'''	
+	print racen/15.
+	print deccen
+'''
 	num_srcs = len(tbl['ra'][:])
 	
 	
@@ -92,8 +92,7 @@ for t in tables:
 		text = 'aegean_'+str(np.around(ras[n], decimals=5))+'_'+str(np.around(decs[n], decimals=5))
 		sc_nme.append(text)
 	src_names.append(sc_nme)
-	'''
-'''
+
 
 lobes6 = SkyCoord(radegs[0][:]*u.degree, decdegs[0][:]*u.degree, frame='icrs')
 lobes7 = SkyCoord(radegs[1][:]*u.degree, decdegs[1][:]*u.degree, frame='icrs')
