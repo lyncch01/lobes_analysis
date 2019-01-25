@@ -151,23 +151,51 @@ for t in range(len(tables)):
 	errPosAng.append(err_pa)
 
 
+lobes6 = SkyCoord(rad[0][:]*u.degree, decd[0][:]*u.degree, frame='icrs')
+lobes7 = SkyCoord(rad[1][:]*u.degree, decd[1][:]*u.degree, frame='icrs')
 
 
-for k in range(len(rad)-1):
-	
+
+## 7 & 6
+indxlobes7, dist2lobes7, dist3lobes7 = lobes6.match_to_catalog_sky(lobes7)
+indx7_match = []
+i = 0
+for d,g in enumerate(indxlobes7):
+	aa = dist2lobes7[d]*u.degree
+	if aa.value < 0.0272:
+		indx7_match.append(g)
+		i += 1
+
+ra7 = np.delete(rad[1][:], indx7_match)
+sname7 = np.delete(src_names[1][:], indx7_match)
+era7 = np.delete(errRA[1][:], indx7_match)
+dec7 = np.delete(decd[1][:], indx7_match)
+edec7 = np.delete(errDEC[1][:], indx7_match)
+flx7 = np.delete(snu[1][:], indx7_match)
+eflx7 = np.delete(errSnu[1][:], indx7_match)
+mjr7 = np.delete(mjr[1][:], indx7_match)
+emjr7 = np.delete(errMjr[1][:], indx7_match)
+mnr7 = np.delete(mnr[1][:], indx7_match)
+emnr7 = np.delete(errMnr[1][:], indx7_match)
+pa7 = np.delete(posAng[1][:], indx7_match)
+epa7 = np.delete(errPosAng[1][:], indx7_match)
+
+'''
+print len(ra7)
+
 tst_indx = xmatch(rad[0][:], decd[0][:], rad[1][:], decd[1][:])
 snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
 del_indx(src_names[1][:], rad[1][:], errRA[1][:], decd[1][:], errDEC[1][:], snu[1][:], errSnu[1][:], mjr[1][:], errMjr[1][:], mnr[1][:], errMnr[1][:], posAng[1][:], errPosAng[1][:], tst_indx)
 
 print len(rat)
-
-
-
 '''
+
+
+
 ## 7 & 8
 
 lobes7 = SkyCoord(ra7*u.degree, dec7*u.degree, frame='icrs')
-lobes8 = SkyCoord(radegs[2][:]*u.degree, decdegs[2][:]*u.degree, frame='icrs')
+lobes8 = SkyCoord(rad[2][:]*u.degree, decd[2][:]*u.degree, frame='icrs')
 indxlobes78, dist2lobes78, dist3lobes78 = lobes8.match_to_catalog_sky(lobes7)
 
 indx78_match = []
@@ -202,22 +230,26 @@ for d,g in enumerate(indxlobes8):
 		indx8_match.append(g)
 		i += 1
 
-ra8 = np.delete(radegs[2][:], indx8_match)
+ra8 = np.delete(rad[2][:], indx8_match)
 sname8 = np.delete(src_names[2][:], indx8_match)
-era8 = np.delete(err_ra[2][:], indx8_match)
-dec8 = np.delete(decdegs[2][:], indx8_match)
-edec8 = np.delete(err_dec[2][:], indx8_match)
-flx8 = np.delete(flx[2][:], indx8_match)
-eflx8 = np.delete(err_flx[2][:], indx8_match)
-mjr8 = np.delete(major[2][:], indx8_match)
-emjr8 = np.delete(err_major[2][:], indx8_match)
-mnr8 = np.delete(minor[2][:], indx8_match)
-emnr8 = np.delete(err_minor[2][:], indx8_match)
-pa8 = np.delete(pa[2][:], indx8_match)
-epa8 = np.delete(err_pa[2][:], indx8_match)
+era8 = np.delete(errRA[2][:], indx8_match)
+dec8 = np.delete(decd[2][:], indx8_match)
+edec8 = np.delete(errDEC[2][:], indx8_match)
+flx8 = np.delete(snu[2][:], indx8_match)
+eflx8 = np.delete(errSnu[2][:], indx8_match)
+mjr8 = np.delete(mjr[2][:], indx8_match)
+emjr8 = np.delete(errMjr[2][:], indx8_match)
+mnr8 = np.delete(mnr[2][:], indx8_match)
+emnr8 = np.delete(errMnr[2][:], indx8_match)
+pa8 = np.delete(posAng[2][:], indx8_match)
+epa8 = np.delete(errPosAng[2][:], indx8_match)
 
 
 
+ras = np.append(rad[0][:], np.append(ra78, ra8))
+print len(ras)
+
+'''
 ## 7 & 9
 lobes7 = SkyCoord(ra78*u.degree, dec78*u.degree, frame='icrs')
 lobes9 = SkyCoord(radegs[3][:]*u.degree, decdegs[3][:]*u.degree, frame='icrs')
