@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo 'Input image: ' $2
+
+refName=${1}.fits
+inputName=${2}.fits
+
+refOut=${1}.in
+outN=${2}.in
+outNrgrid=${2}.regridded
+outFits=${2}.regrid.fits
+
+echo ${outNrgrid}
+echo ${outFits}
+
+fits in=${refName} op=xyin out=${refOut}
+fits in=${inputName} op=xyin out=${outN}
+regrid in=${outN} out=${outNrgrid} tin=${refOut}
+fits in=${outNrgrid} op=xyout out=${outFits}
+
