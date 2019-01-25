@@ -32,6 +32,39 @@ def precise_dist(ra1, dec1, ra2, dec2):
     dist = dist * 180.0/np.pi
     return dist
 
+#### Function to do cross-match and then remove common sources
+
+def xmatch(rr0, dd0, rr1, dd1):
+	lobes0 = SkyCoord(rr0*u.degree, dd0*u.degree, frame='icrs')
+	lobes1 = SkyCoord(rr1*u.degree, dd1*u.degree, frame='icrs')
+	
+	indxlobes1, dist2lobes1, dist3lobes1 = lobes0.match_to_catalog_sky(lobes1)
+	indx1_match = []
+	i = 0
+	for d,g in enumerate(indxlobes1):
+		aa = dist2lobes1[d]*u.degree
+		if aa.value < 0.0272:
+			indx1_match.append(g)
+			i += 1
+	return indx1_match
+
+def del_indx(sn1, ra1, er1, de1, ede1, f1, ef1, mj1, emj1, mn1, emn1, pa1, epa1, dindx):
+	
+	sn_new  = np.delete(sn1  , dindx)
+	ra_new  = np.delete(ra1   , dindx)
+	er_new  = np.delete(er1 , dindx)
+	de_new  = np.delete(de1  , dindx)
+	ede_new = np.delete(ede1 , dindx)
+	f_new   = np.delete(f1   , dindx)
+	ef_new  = np.delete(ef1  , dindx)
+	mj_new  = np.delete(mj1  , dindx)
+	emj_new = np.delete(emj1 , dindx)
+	mn_new  = np.delete(mn1  , dindx)
+	emn_new = np.delete(emn1 , dindx)
+	pa_new  = np.delete(pa1  , dindx)
+	epa_new = np.delete(epa1 , dindx)
+	
+	return sn_new, ra_new, er_new, de_new, ede_new, f_new, ef_new, mj_new, emj_new, mn_new, emn_new, pa_new, epa_new
 #########################################################################################
 ## MAIN PROGRAM
 #########################################################################################
@@ -48,81 +81,89 @@ tables = np.array(tables)
 ## Create an array that contains all the relevant information from each 
 ## aegean catalog. Also only select sources within the image FOV
 src_names = []
-radegs = []
-err_ra = []
-decdegs = []
-err_dec = []
-flx= []
-err_flx = []
-major = []
-err_major = []
-minor = []
-err_minor = []
-pa = []
-err_pa = []
+rad = []
+errRA = []
+decd = []
+errDEC = []
+snu= []
+errSnu = []
+mjr = []
+errMjr = []
+mnr = []
+errMnr = []
+posAng = []
+errPosAng = []
 
-for t in tables:
-
-	data,header= pf.getdata('LOBES%s_%s.fits' %(t[5], chn), header=True)
+for t in range(len(tables)):
+	print tables[t]
+	data,header= pf.getdata('LOBES%s_%s.fits' %(tables[t][5], chn), header=True)
 	racen = float(header['CRVAL1']) #deg
 	deccen = float(header['CRVAL2']) #deg
 	
-	print racen/15.
-	print deccen
-'''
+	radegs    = []
+	err_ra    = []
+	decdegs   = []
+	err_dec   = []
+	flx       = []
+	err_flx   = []
+	major     = []
+	err_major = []
+	minor     = []
+	err_minor = []
+	pa        = []
+	err_pa    = []
+	sc_nme    = []
+
+	tbl = Table.read(tables[t])
 	num_srcs = len(tbl['ra'][:])
-	
-	
-	radegs.append(np.array(tbl['ra'][:]))
-	ras = np.array(tbl['ra'][:])
-	err_ra.append(np.array(tbl['err_ra'][:]))
-	decdegs.append(np.array(tbl['dec'][:]))
-	decs = np.array(tbl['dec'][:])
-	err_dec.append(np.array(tbl['err_dec'][:]))
-	flx.append(np.array(tbl['int_flux'][:]))
-	err_flx.append(np.array(tbl['err_int_flux'][:]))
-	major.append(np.array(tbl['a'][:]))
-	err_major.append(np.array(tbl['err_a'][:]))
-	minor.append(np.array(tbl['b'][:]))
-	err_minor.append(np.array(tbl['err_b'][:]))
-	pa.append(np.array(tbl['pa'][:]))
-	err_pa.append(np.array(tbl['err_pa'][:]))
-	sc_nme = []
 	for n in range(num_srcs):
-		text = 'aegean_'+str(np.around(ras[n], decimals=5))+'_'+str(np.around(decs[n], decimals=5))
-		sc_nme.append(text)
+		aa1 = tbl['ra'][n]
+		bb1 = tbl['dec'][n]
+		dist = precise_dist(racen, deccen, aa1, bb1)
+		if dist < fov:
+			radegs.append(tbl['ra'][n])
+			err_ra.append(tbl['err_ra'][n])
+			decdegs.append(tbl['dec'][n])
+			err_dec.append(tbl['err_dec'][n])
+			flx.append(tbl['int_flux'][n])
+			err_flx.append(tbl['err_int_flux'][n])
+			major.append(tbl['a'][n])
+			err_major.append(tbl['err_a'][n])
+			minor.append(tbl['b'][n])
+			err_minor.append(tbl['err_b'][n])
+			pa.append(tbl['pa'][n])
+			err_pa.append(tbl['err_pa'][n])
+			text = 'aegean_'+str(np.around(tbl['ra'][n], decimals=5))+'_'+str(np.around(tbl['dec'][n], decimals=5))
+			sc_nme.append(text)
+
 	src_names.append(sc_nme)
+	rad.append(radegs)
+	errRA.append(err_ra)
+	decd.append(decdegs)
+	errDEC.append(err_dec)
+	snu.append(flx)
+	errSnu.append(err_flx)
+	mjr.append(major)
+	errMjr.append(err_major)
+	mnr.append(minor)
+	errMnr.append(err_minor)
+	posAng.append(pa)
+	errPosAng.append(err_pa)
 
 
-lobes6 = SkyCoord(radegs[0][:]*u.degree, decdegs[0][:]*u.degree, frame='icrs')
-lobes7 = SkyCoord(radegs[1][:]*u.degree, decdegs[1][:]*u.degree, frame='icrs')
+
+
+for k in range(len(rad)-1):
+	
+tst_indx = xmatch(rad[0][:], decd[0][:], rad[1][:], decd[1][:])
+snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
+del_indx(src_names[1][:], rad[1][:], errRA[1][:], decd[1][:], errDEC[1][:], snu[1][:], errSnu[1][:], mjr[1][:], errMjr[1][:], mnr[1][:], errMnr[1][:], posAng[1][:], errPosAng[1][:], tst_indx)
+
+print len(rat)
 
 
 
-## 7 & 6
-indxlobes7, dist2lobes7, dist3lobes7 = lobes6.match_to_catalog_sky(lobes7)
-indx7_match = []
-i = 0
-for d,g in enumerate(indxlobes7):
-	aa = dist2lobes7[d]*u.degree
-	if aa.value < 0.0272:
-		indx7_match.append(g)
-		i += 1
-
-ra7 = np.delete(radegs[1][:], indx7_match)
-sname7 = np.delete(src_names[1][:], indx7_match)
-era7 = np.delete(err_ra[1][:], indx7_match)
-dec7 = np.delete(decdegs[1][:], indx7_match)
-edec7 = np.delete(err_dec[1][:], indx7_match)
-flx7 = np.delete(flx[1][:], indx7_match)
-eflx7 = np.delete(err_flx[1][:], indx7_match)
-mjr7 = np.delete(major[1][:], indx7_match)
-emjr7 = np.delete(err_major[1][:], indx7_match)
-mnr7 = np.delete(minor[1][:], indx7_match)
-emnr7 = np.delete(err_minor[1][:], indx7_match)
-pa7 = np.delete(pa[1][:], indx7_match)
-epa7 = np.delete(err_pa[1][:], indx7_match)
-
+'''
 ## 7 & 8
 
 lobes7 = SkyCoord(ra7*u.degree, dec7*u.degree, frame='icrs')
