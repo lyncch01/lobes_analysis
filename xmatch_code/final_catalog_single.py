@@ -150,7 +150,7 @@ for t in range(len(tables)):
 	posAng.append(pa)
 	errPosAng.append(err_pa)
 
-
+'''
 lobes6 = SkyCoord(rad[0][:]*u.degree, decd[0][:]*u.degree, frame='icrs')
 lobes7 = SkyCoord(rad[1][:]*u.degree, decd[1][:]*u.degree, frame='icrs')
 
@@ -179,18 +179,6 @@ mnr7 = np.delete(mnr[1][:], indx7_match)
 emnr7 = np.delete(errMnr[1][:], indx7_match)
 pa7 = np.delete(posAng[1][:], indx7_match)
 epa7 = np.delete(errPosAng[1][:], indx7_match)
-
-'''
-print len(ra7)
-
-tst_indx = xmatch(rad[0][:], decd[0][:], rad[1][:], decd[1][:])
-snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
-del_indx(src_names[1][:], rad[1][:], errRA[1][:], decd[1][:], errDEC[1][:], snu[1][:], errSnu[1][:], mjr[1][:], errMjr[1][:], mnr[1][:], errMnr[1][:], posAng[1][:], errPosAng[1][:], tst_indx)
-
-print len(rat)
-'''
-
-
 
 ## 7 & 8
 
@@ -248,6 +236,28 @@ epa8 = np.delete(errPosAng[2][:], indx8_match)
 
 ras = np.append(rad[0][:], np.append(ra78, ra8))
 print len(ras)
+
+'''
+ras = rad[0][:]
+for i in range(len(rad)):
+	k = i + 1
+	ranew = []
+	for j in range(len(rad) - k):
+		if i == 0:
+			l = j + k
+			print 'Cross match: '+str(i)+' with '+str(l)
+			indx = xmatch(rad[i][:], decd[i][:], rad[l][:], decd[l][:])
+			snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
+			del_indx(src_names[l][:], rad[l][:], errRA[l][:], decd[l][:], errDEC[l][:], snu[l][:], errSnu[l][:], mjr[l][:], errMjr[l][:], mnr[l][:], errMnr[l][:], posAng[l][:], errPosAng[l][:], tst_indx)
+			ranew.append(rat)
+		else:
+			idnx = xmatch(
+
+
+################ Maybe I have to break it up between deletes; one loop for 6/7, 6/8, 6/9; next
+################ loop for 7/8, 7/9; then just 8/9 -- cant seem to figure out how to update the
+################ array in the loops :(
+
 
 '''
 ## 7 & 9
