@@ -1,27 +1,16 @@
 import numpy as np
-#import astropy.wcs as wcs
 import astropy.io.fits as pf
-#from astropy import units as au
-#from astropy.coordinates import SkyCoord
-#from astropy.coordinates import Angle
-#from astropy.table import Table
 import os
 import glob
-#import datetime
-#import pytz
 import sys
-#from math import *
 import gc
-#import aplpy
-
-
 
 ################## MedianImage.py #####################################################   
+## Functions to create the cube of image pixels and make header changes for final image
 
 gc.enable()
 
 def cubeCreate(fileN):
-	print fileN
 	img = None
 	gc.collect()
 	img = []
@@ -32,8 +21,6 @@ def cubeCreate(fileN):
 		hdulist = pf.open(fname)
 		data = np.ma.masked_array(hdulist[0].data, fill_value=np.nan)
 		data[np.isnan(data)] = np.ma.masked
-		#data = data[:,:,99:6499, 99:6499]
-		#print np.shape(data)
 		img.append(data.copy())
 		hdulist.close()
 		del hdulist[0].data
@@ -41,7 +28,6 @@ def cubeCreate(fileN):
 		hdulist = None
 		gc.collect()
         gc.collect()
-	#print len(img[0])
 	return img
 	
 def headerChanging(iname, fname):
@@ -50,6 +36,7 @@ def headerChanging(iname, fname):
 	pf.writeto(fname, data, headerInput, clobber=True)
 
 ################## catalog create #####################################################   
+## Functions to run BANE and aegean on input images
 
 def bane_run(files, c):
 	if not os.path.isfile(files[:-5]+'_bkg.fits'):
@@ -107,5 +94,3 @@ print 'Run BANE'
 aegean_run(outfile_I, bmaj, bmin, bpa, '1', 'MWA', fname)
 print 'Run aegean'
 
-#cmd = 'mv %s STACKED' %(outfile_I)
-#os.system(cmd)
