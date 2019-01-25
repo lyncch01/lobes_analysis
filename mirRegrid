@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#Miriad script to regrid input images: mirRegrid reference_imageName input_imageName
+
 echo 'Input image: ' $2
 
 refName=${1}.fits
