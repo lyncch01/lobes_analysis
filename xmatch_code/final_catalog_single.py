@@ -14,9 +14,7 @@ import os
 import sys
 from math import *
 
-#### Functions to determine angluar distance between two points:
-
-
+#### Functions to determine angluar distance between two points
 def great_circle_dist1(r1, d1, r2, d2):
     return acos(sin(d1)*sin(d2) + cos(d1)*cos(d2)*cos(r1 - r2))
 
@@ -32,8 +30,7 @@ def precise_dist(ra1, dec1, ra2, dec2):
     dist = dist * 180.0/np.pi
     return dist
 
-#### Function to do cross-match and then remove common sources
-
+#### Does cross-match between two catalogs of sources
 def xmatch(rr0, dd0, rr1, dd1):
 	lobes0 = SkyCoord(rr0*u.degree, dd0*u.degree, frame='icrs')
 	lobes1 = SkyCoord(rr1*u.degree, dd1*u.degree, frame='icrs')
@@ -48,6 +45,7 @@ def xmatch(rr0, dd0, rr1, dd1):
 			i += 1
 	return indx1_match
 
+## Deletes array entries associated with dindx and returns new array without entries
 def del_indx(sn1, ra1, er1, de1, ede1, f1, ef1, mj1, emj1, mn1, emn1, pa1, epa1, dindx):
 	
 	sn_new  = np.delete(sn1  , dindx)
@@ -65,6 +63,48 @@ def del_indx(sn1, ra1, er1, de1, ede1, f1, ef1, mj1, emj1, mn1, emn1, pa1, epa1,
 	epa_new = np.delete(epa1 , dindx)
 	
 	return sn_new, ra_new, er_new, de_new, ede_new, f_new, ef_new, mj_new, emj_new, mn_new, emn_new, pa_new, epa_new
+
+
+## Function to go through and cross match each field and return arrays with common sources removed
+def xmatch_array(sn1, ra1, er1, de1, ede1, f1, ef1, mj1, emj1, mn1, emn1, pa1, epa1):
+	srcnew = []
+	ranew = []
+	eranew = []
+	decnew = []
+	edecnew = []
+	flxnew = []
+	eflxnew = []
+	mjrnew = []
+	emjrnew = []
+	mnrnew = []
+	emnrnew = []
+	panew = []
+	epanew = []
+	
+	for i in range(len(ra1)-1):
+		k = i + 1
+		print 'Cross match: '+str(0)+' with '+str(k)
+		indx = xmatch(ra1[0][:], de1[0][:], ra1[k][:], de1[k][:])
+		snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
+		del_indx(sn1[k][:], ra1[k][:], er1[k][:], de1[k][:], ede1[k][:], f1[k][:], ef1[k][:], mj1[k][:], emj1[k][:], mn1[k][:], emn1[k][:], pa1[k][:], epa1[k][:], indx)
+		srcnew.append(snt)
+		ranew.append(rat)
+		eranew.append(ert)
+		decnew.append(dt)
+		edecnew.append(edt)
+		flxnew.append(ft)
+		eflxnew.append(eft)
+		mjrnew.append(mjt)
+		emjrnew.append(emjt)
+		mnrnew.append(mnt)
+		emnrnew.append(emnt)
+		panew.append(pat)
+		epanew.append(ept)
+
+	return srcnew, ranew, eranew, decnew, edecnew, flxnew, eflxnew, mjrnew, emjrnew, mnrnew, emnrnew, panew, epanew
+
+
+
 #########################################################################################
 ## MAIN PROGRAM
 #########################################################################################
@@ -150,211 +190,87 @@ for t in range(len(tables)):
 	posAng.append(pa)
 	errPosAng.append(err_pa)
 
-'''
-lobes6 = SkyCoord(rad[0][:]*u.degree, decd[0][:]*u.degree, frame='icrs')
-lobes7 = SkyCoord(rad[1][:]*u.degree, decd[1][:]*u.degree, frame='icrs')
+
+## Start collecting final source list for each of the arrays; we will keep 
+## all sources in the field 6 catalog
+
+srcN       = src_names[0][:]
+ras        = rad[0][:]
+err_ras    = errRA[0][:]
+decs       = decd[0][:]
+err_decs   = errDEC[0][:]
+flxs       = snu[0][:]
+err_flxs   = errSnu[0][:]
+majors     = mjr[0][:]
+err_majors = errMjr[0][:]
+minors     = mnr[0][:]
+err_minors = errMnr[0][:]
+pas        = posAng[0][:]
+err_pas    = errPosAng[0][:]
+
+## Cross-match field 6 with other fields
+sc0, ra0, era0, dec0, edec0, flx0, eflx0, mjr0, emjr0, mnr0, emnr0, pa0, epa0 =\
+xmatch_array(src_names, rad, errRA, decd, errDEC, snu, errSnu, mjr, errMjr, mnr, errMnr, posAng, errPosAng)
+
+## Add all sources that are not common between field 7 and 6
+srcN       = np.append(srcN, sc0[0])
+ras        = np.append(ras, ra0[0])
+err_ras    =  np.append(err_ras, era0[0])
+decs       = np.append(decs, dec0[0])
+err_decs   = np.append(err_decs, edec0[0])
+flxs       = np.append(flxs, flx0[0])
+err_flxs   = np.append(err_flxs, eflx0[0])
+majors     = np.append(majors, mjr0[0])
+err_majors = np.append(err_majors, emjr0[0])
+minors     = np.append(minors, mnr0[0])
+err_minors = np.append(err_minors, emnr0[0])
+pas 	   = np.append(pas, pa0[0])
+err_pas    = np.append(err_pas, epa0[0])
 
 
-
-## 7 & 6
-indxlobes7, dist2lobes7, dist3lobes7 = lobes6.match_to_catalog_sky(lobes7)
-indx7_match = []
-i = 0
-for d,g in enumerate(indxlobes7):
-	aa = dist2lobes7[d]*u.degree
-	if aa.value < 0.0272:
-		indx7_match.append(g)
-		i += 1
-
-ra7 = np.delete(rad[1][:], indx7_match)
-sname7 = np.delete(src_names[1][:], indx7_match)
-era7 = np.delete(errRA[1][:], indx7_match)
-dec7 = np.delete(decd[1][:], indx7_match)
-edec7 = np.delete(errDEC[1][:], indx7_match)
-flx7 = np.delete(snu[1][:], indx7_match)
-eflx7 = np.delete(errSnu[1][:], indx7_match)
-mjr7 = np.delete(mjr[1][:], indx7_match)
-emjr7 = np.delete(errMjr[1][:], indx7_match)
-mnr7 = np.delete(mnr[1][:], indx7_match)
-emnr7 = np.delete(errMnr[1][:], indx7_match)
-pa7 = np.delete(posAng[1][:], indx7_match)
-epa7 = np.delete(errPosAng[1][:], indx7_match)
-
-## 7 & 8
-
-lobes7 = SkyCoord(ra7*u.degree, dec7*u.degree, frame='icrs')
-lobes8 = SkyCoord(rad[2][:]*u.degree, decd[2][:]*u.degree, frame='icrs')
-indxlobes78, dist2lobes78, dist3lobes78 = lobes8.match_to_catalog_sky(lobes7)
-
-indx78_match = []
-i = 0
-for d,g in enumerate(indxlobes78):
-	aa = dist2lobes78[d]*u.degree
-	if aa.value < 0.0272:
-		indx78_match.append(g)
-		i += 1
-
-ra78 = np.delete(ra7, indx78_match)
-sname78 = np.delete(sname7, indx78_match)
-era78 = np.delete(era7, indx78_match)
-dec78 = np.delete(dec7, indx78_match)
-edec78 = np.delete(edec7, indx78_match)
-flx78 = np.delete(flx7, indx78_match)
-eflx78 = np.delete(eflx7, indx78_match)
-mjr78 = np.delete(mjr7, indx78_match)
-emjr78 = np.delete(emjr7, indx78_match)
-mnr78 = np.delete(mnr7, indx78_match)
-emnr78 = np.delete(emnr7, indx78_match)
-pa78 = np.delete(pa7, indx78_match)
-epa78 = np.delete(epa7, indx78_match)
-
-## 6 & 8
-indxlobes8, dist2lobes8, dist3lobes8 = lobes6.match_to_catalog_sky(lobes8)
-indx8_match = []
-i = 0
-for d,g in enumerate(indxlobes8):
-	aa = dist2lobes8[d]*u.degree
-	if aa.value < 0.0272:
-		indx8_match.append(g)
-		i += 1
-
-ra8 = np.delete(rad[2][:], indx8_match)
-sname8 = np.delete(src_names[2][:], indx8_match)
-era8 = np.delete(errRA[2][:], indx8_match)
-dec8 = np.delete(decd[2][:], indx8_match)
-edec8 = np.delete(errDEC[2][:], indx8_match)
-flx8 = np.delete(snu[2][:], indx8_match)
-eflx8 = np.delete(errSnu[2][:], indx8_match)
-mjr8 = np.delete(mjr[2][:], indx8_match)
-emjr8 = np.delete(errMjr[2][:], indx8_match)
-mnr8 = np.delete(mnr[2][:], indx8_match)
-emnr8 = np.delete(errMnr[2][:], indx8_match)
-pa8 = np.delete(posAng[2][:], indx8_match)
-epa8 = np.delete(errPosAng[2][:], indx8_match)
+## Cross-match field 7 with other fields (8 & 9)
+sc1, ra1, era1, dec1, edec1, flx1, eflx1, mjr1, emjr1, mnr1, emnr1, pa1, epa1 = \
+xmatch_array(sc0, ra0, era0, dec0, edec0, flx0, eflx0, mjr0, emjr0, mnr0, emnr0, pa0, epa0)
 
 
-
-ras = np.append(rad[0][:], np.append(ra78, ra8))
-print len(ras)
+## Add all sources that are not common between field 8 and 7 
+srcN       = np.append(srcN, sc1[0])
+ras        = np.append(ras, ra1[0])
+err_ras    =  np.append(err_ras, era1[0])
+decs       = np.append(decs, dec1[0])
+err_decs   = np.append(err_decs, edec1[0])
+flxs       = np.append(flxs, flx1[0])
+err_flxs   = np.append(err_flxs, eflx1[0])
+majors     = np.append(majors, mjr1[0])
+err_majors = np.append(err_majors, emjr1[0])
+minors     = np.append(minors, mnr1[0])
+err_minors = np.append(err_minors, emnr1[0])
+pas 	   = np.append(pas, pa1[0])
+err_pas    = np.append(err_pas, epa1[0])
 
 '''
-ras = rad[0][:]
-for i in range(len(rad)):
-	k = i + 1
-	ranew = []
-	for j in range(len(rad) - k):
-		if i == 0:
-			l = j + k
-			print 'Cross match: '+str(i)+' with '+str(l)
-			indx = xmatch(rad[i][:], decd[i][:], rad[l][:], decd[l][:])
-			snt, rat, ert, dt, edt, ft, eft, mjt, emjt, mnt, emnt, pat, ept = \
-			del_indx(src_names[l][:], rad[l][:], errRA[l][:], decd[l][:], errDEC[l][:], snu[l][:], errSnu[l][:], mjr[l][:], errMjr[l][:], mnr[l][:], errMnr[l][:], posAng[l][:], errPosAng[l][:], tst_indx)
-			ranew.append(rat)
-		else:
-			idnx = xmatch(
+## Cross-match field 8 with field 9
+sc2, ra2, era2, dec2, edec2, flx2, eflx2, mjr2, emjr2, mnr2, emnr2, pa2, epa2 = \
+xmatch_array(sc1, ra1, era1, dec1, edec1, flx1, eflx1, mjr1, emjr1, mnr1, emnr1, pa1, epa1)
 
+## Add all sources not common between field 9 and 8
+srcN       = np.append(srcN, sc2)
+ras        = np.append(ras, ra2)
+err_ras    =  np.append(err_ras, era2)
+decs       = np.append(decs, dec2)
+err_decs   = np.append(err_decs, edec2)
+flxs       = np.append(flxs, flx2)
+err_flxs   = np.append(err_flxs, eflx2)
+majors     = np.append(majors, mjr2)
+err_majors = np.append(err_majors, emjr2)
+minors     = np.append(minors, mnr2)
+err_minors = np.append(err_minors, emnr2)
+pas 	   = np.append(pas, pa2)
+err_pas    = np.append(err_pas, epa2)
 
-################ Maybe I have to break it up between deletes; one loop for 6/7, 6/8, 6/9; next
-################ loop for 7/8, 7/9; then just 8/9 -- cant seem to figure out how to update the
-################ array in the loops :(
+print 'Total number of unique sources: '+str(len(ras))
 
-
-'''
-## 7 & 9
-lobes7 = SkyCoord(ra78*u.degree, dec78*u.degree, frame='icrs')
-lobes9 = SkyCoord(radegs[3][:]*u.degree, decdegs[3][:]*u.degree, frame='icrs')
-indxlobes79, dist2lobes79, dist3lobes79 = lobes9.match_to_catalog_sky(lobes7)
-indx79_match = []
-i = 0
-for d,g in enumerate(indxlobes79):
-	aa = dist2lobes79[d]*u.degree
-	if aa.value < 0.0272:
-		indx79_match.append(g)
-		i += 1
-
-ra79 = np.delete(ra78, indx79_match)
-sname79 = np.delete(sname78, indx79_match)
-era79 = np.delete(era78, indx79_match)
-dec79 = np.delete(dec78, indx79_match)
-edec79 = np.delete(edec78, indx79_match)
-flx79 = np.delete(flx78, indx79_match)
-eflx79 = np.delete(eflx78, indx79_match)
-mjr79 = np.delete(mjr78, indx79_match)
-emjr79 = np.delete(emjr78, indx79_match)
-mnr79 = np.delete(mnr78, indx79_match)
-emnr79 = np.delete(emnr78, indx79_match)
-pa79 = np.delete(pa78, indx79_match)
-epa79 = np.delete(epa78, indx79_match)
-
-
-## 8 & 9
-lobes8 = SkyCoord(ra8*u.degree, dec8*u.degree, frame='icrs')
-lobes9 = SkyCoord(radegs[3][:]*u.degree, decdegs[3][:]*u.degree, frame='icrs')
-indxlobes89, dist2lobes89, dist3lobes89 = lobes9.match_to_catalog_sky(lobes8)
-indx89_match = []
-i = 0
-for d,g in enumerate(indxlobes89):
-	aa = dist2lobes89[d]*u.degree
-	if aa.value < 0.0272:
-		indx89_match.append(g)
-		i += 1
-
-ra89 = np.delete(ra8, indx89_match)
-sname89 = np.delete(sname8, indx89_match)
-era89 = np.delete(era8, indx89_match)
-dec89 = np.delete(dec8, indx89_match)
-edec89 = np.delete(edec8, indx89_match)
-flx89 = np.delete(flx8, indx89_match)
-eflx89 = np.delete(eflx8, indx89_match)
-mjr89 = np.delete(mjr8, indx89_match)
-emjr89 = np.delete(emjr8, indx89_match)
-mnr89 = np.delete(mnr8, indx89_match)
-emnr89 = np.delete(emnr8, indx89_match)
-pa89 = np.delete(pa8, indx89_match)
-epa89 = np.delete(epa8, indx89_match)
-
-## 9 & 6
-
-indxlobes9, dist2lobes9, dist3lobes9 = lobes6.match_to_catalog_sky(lobes9)
-indx9_match = []
-i = 0
-for d,g in enumerate(indxlobes9):
-	aa = dist2lobes9[d]*u.degree
-	if aa.value < 0.0272:
-		indx9_match.append(g)
-		i += 1
-
-ra9 = np.delete(radegs[3][:], indx9_match)
-sname9 = np.delete(src_names[3][:], indx9_match)
-era9 = np.delete(err_ra[3][:], indx9_match)
-dec9 = np.delete(decdegs[3][:], indx9_match)
-edec9 = np.delete(err_dec[3][:], indx9_match)
-flx9 = np.delete(flx[3][:], indx9_match)
-eflx9 = np.delete(err_flx[3][:], indx9_match)
-mjr9 = np.delete(major[3][:], indx9_match)
-emjr9 = np.delete(err_major[3][:], indx9_match)
-mnr9 = np.delete(minor[3][:], indx9_match)
-emnr9 = np.delete(err_minor[3][:], indx9_match)
-pa9 = np.delete(pa[3][:], indx9_match)
-epa9 = np.delete(err_pa[3][:], indx9_match)
-
-
-srcN = np.append(src_names[0][:], np.append(sname79, np.append(sname89, sname9)))
-ras = np.append(radegs[0][:], np.append(ra79, np.append(ra89, ra9)))
-err_ras = np.append(err_ra[0][:], np.append(era79, np.append(era89, era9)))
-decs = np.append(decdegs[0][:], np.append(dec79, np.append(dec89, dec9)))
-err_decs = np.append(err_dec[0][:], np.append(edec79, np.append(edec89, edec9)))
-flxs = np.append(flx[0][:], np.append(flx79, np.append(flx89, flx9)))
-err_flxs = np.append(err_flx[0][:], np.append(eflx79, np.append(eflx89, eflx9)))
-majors = np.append(major[0][:], np.append(mjr79, np.append(mjr89, mjr9)))
-err_majors = np.append(err_major[0][:], np.append(emjr79, np.append(emjr89, emjr9)))
-minors = np.append(minor[0][:], np.append(mnr79, np.append(mnr89, mnr9)))
-err_minors = np.append(err_minor[0][:], np.append(emnr79, np.append(emnr89, emnr9)))
-pas = np.append(pa[0][:], np.append(pa79, np.append(pa89, pa9)))
-err_pas = np.append(err_pa[0][:], np.append(epa79, np.append(epa89, epa9)))
-
-print len(ras)
-
+## Write out unique sources to fits table
 tbl_out = Table([srcN, ras, err_ras, decs, err_decs, flxs, err_flxs, majors, err_majors, minors, err_minors, pas, err_pas], names=('NAMES', 'RA', 'ERR_RA', 'DEC', 'ERR_DEC', 'INT_FLUX', 'ERR_INT_FLUX', 'a', 'ERR_a', 'b', 'ERR_b', 'PA', 'ERR_PA'))
 tbl_out.write(tbl_name, format='fits')
 '''
