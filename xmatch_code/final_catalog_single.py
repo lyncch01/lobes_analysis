@@ -1,16 +1,15 @@
 '''
 Reads in each of the catalogs from LOBES fields around a single EoR field. Cross-matches catalogs from each field to determine common sources. Reads out final catalog that contains all sources from all fields without repeating any sources.
+
+Run script: python final_catalog_single.py 'chn'
 '''
 
 import numpy as np
-import astropy.wcs as wcs
 import astropy.io.fits as pf
 from astropy import units as u
 from astropy.coordinates import ICRS,SkyCoord
-from astropy.coordinates import Angle
 from astropy.table import Table
 import glob
-import os
 import sys
 from math import *
 
@@ -108,7 +107,6 @@ def xmatch_array(sn1, ra1, er1, de1, ede1, f1, ef1, mj1, emj1, mn1, emn1, pa1, e
 #########################################################################################
 ## MAIN PROGRAM
 #########################################################################################
-path = os.getcwd()
 chn = sys.argv[1]
 fov = np.round((234.2/float(chn))*(1./4.509)*(180./np.pi), decimals=0) #deg
 tbl_name = 'LOBES_chn%s.fits' %(chn)
@@ -247,6 +245,8 @@ minors     = np.append(minors, mnr1[0])
 err_minors = np.append(err_minors, emnr1[0])
 pas 	   = np.append(pas, pa1[0])
 err_pas    = np.append(err_pas, epa1[0])
+
+print len(ras)
 
 '''
 ## Cross-match field 8 with field 9
