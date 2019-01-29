@@ -13,7 +13,7 @@ The median stacked images plus its background/rms images and the source catalog 
 
 (3) Once source catalogs are created for each of the fields (either those around EoR1 or EoR0) for a single frequency, final_catalog_single.py is used to create a single catalog of sources that combines the sources from all the fields while removing sources repeated in the individual field catalogs (ensures sources are not repeated in the final catalog). This script only selects sources from the individual catalogs that are within the field-of-view for each frequency: 
 
-119 MHz ==> 32 
+119 MHz ==> 32 deg
 
 154 MHz ==> 24 deg
 
